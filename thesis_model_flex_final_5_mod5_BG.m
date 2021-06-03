@@ -1,4 +1,6 @@
 %% Example 1: Simplest case
+
+% This commented out section was separated to initBedMachine.m
 % The simplest way to load BedMachine data is to just specify which variable
 % you want to load, like this:
 % ncid = netcdf.open('BedMachineGreenland-2017-09-20.nc');
@@ -21,8 +23,10 @@ Small_surf = BM.surface';
 x = BM.x; % Should use this for referencing point inputs
 y = BM.y;
 Small_bed = BM.bed';
+dx = BM.newGridSize;
 clear BM
-%% Pick the points the line should pass through
+
+% %% Pick the points the line should pass through
 % This section should be for user input of points of interest and/or for
 % automatic point generation. The user should pick 2 points (either by
 % entering lat/long in decimal degrees, or by picking on a map. The code
@@ -88,20 +92,19 @@ else
 end
     
 
-%% Chris's original setup for drawing the line hardcoded
-% Study 66.986881,-53.733691 (1864 and 1869) Sis  66.951285,-53.725157 (1869)
-%kang  66.953476, -50.873059 (1885) Disco  69.451704,-52.581850 (1589)
-%aasiat  68.713605,-52.801423 (1679)
-[a,b] = ll2psn(point1(1),point1(2));
-Lat = find(y < b);% x and a           y and b
-lon = [1864 1869];  % These are hard coded locations and should instead be input and converted
-lat = [269 300];
-slope = ((lon(2)-lon(1))/((lat(2)-lat(1))));
-lon2 =[(lon(1)-(1533*slope*(lat(1)/1533))),(lon(2)+(1533*slope*((1533-lat(2))/1533)))];
-lat2=[1 1533];
-x1=lat2(1);x2=lat2(2);y1=round(lon2(1));y2=round(lon2(2));
+% %% Chris's original setup for drawing the line hardcoded
+% % Study 66.986881,-53.733691 (1864 and 1869) Sis  66.951285,-53.725157 (1869)
+% %kang  66.953476, -50.873059 (1885) Disco  69.451704,-52.581850 (1589)
+% %aasiat  68.713605,-52.801423 (1679)
+% [a,b] = ll2psn(point1(1),point1(2));
+% Lat = find(y < b);% x and a           y and b
+% lon = [1864 1869];  % These are hard coded locations and should instead be input and converted
+% lat = [269 300];
+% slope = ((lon(2)-lon(1))/((lat(2)-lat(1))));
+% lon2 =[(lon(1)-(1533*slope*(lat(1)/1533))),(lon(2)+(1533*slope*((1533-lat(2))/1533)))];
+% lat2=[1 1533];
+% x1=lat2(1);x2=lat2(2);y1=round(lon2(1));y2=round(lon2(2));
 
-%%
 
 
 figure(1)
@@ -111,16 +114,11 @@ imagesc(x,y,Small_bed)
 title('Bedmachine Bedrock topography under the Current Greenland Ice Sheet');
 % set(gca,'YDir','reverse')
 xlabel('distance (Km)');ylabel('distance(Km)');
-
-% line([x1,x2],[y1,y2]);
-% line(x([x1,x2]),y([y1,y2]))
 line(x(xbound),y(ybound))
-% line([0 1],[0 1]); 
-% plot(lat2,lon2,'*r')
 plot(c,d,'or')
-% line(c,d)
+% line(x([x1,x2]),y([y1,y2]))
 hold off
-%%
+
 % Sis_bed=improfile(Small_bed,lat2,lon2).';% if doing a complex profile
 % Sis_surf = improfile(Small_surf,lat2,lon2).';
 
@@ -133,31 +131,48 @@ Sis_surf = improfile(Small_surf,xbound,ybound).';
 % be done using the slope of the ice sheet. I don't think max can be used
 % automatically in the event that a mountain on the east side is higher
 % than the ice divide. For now however, I'll use the max peak.
-[maxIceElevation, iceDivide] = max(Sis_surf) 
-%%
+[maxIceElevation, iceDivide] = max(Sis_surf);
+
 % AAA = (Sis_surf(1,435:725)-Sis_bed(1,435:725));
 %Sis_bed = Small_bed(1869,:); %horizontal profile
-TKM = iceDivide; % total km of the studey path
+TKM = iceDivide; % total km of the study path
 SKM = 495; %total km for small ice path
+
 figure(2)
+clf
+plot((x(1:TKM)/1000),(Sis_bed(1:TKM)))
 hold on
-plot((x(1:TKM)/1000),(Sis_bed(1,1:TKM)))
-plot((x(1:TKM)/1000),(Sis_surf(1,1:TKM)))
-%%
+plot((x(1:TKM)/1000),(Sis_surf(1:TKM)))
+hold off
+
 figure(3)
+clf
 plot(x/1000,[Sis_bed;Sis_surf])
 hold on
 plot(x(iceDivide)/1000,maxIceElevation,'ok')
-west_x = (0:1000:724000); %west half of ice sheet
-%% max flex from 0
-% constants
-dx = 1000;    % [m] choose some suitably small delta x
+hold off
 
-% Lmax should be set earlier as a parameter input
-Lmax  = (725-152)*1000*2; % [m] full width of the ice sheet at maximum (edge to edge)
+
+% west_x = (0:1000:724000); 
+west_x = (0:dx:(iceDivide-1)*dx); % west half of ice sheet
+
+% Use this to zoom in to pick the LGM max location. This value would be
+% better suited as an input or "automatically" picked based on the line
+% generated above.
+figure(4)
+plot(1:iceDivide,Sis_bed(1:iceDivide))
+%% max flex from 0
+
+% dx = 1000;    % [m] choose some suitably small delta x
+contShelf = 152; % this is the continental shelf edge 'eyballed' from fig4
+iceRetreat = 607;
+
+% Lmax could be set earlier as a parameter input
+Lmax  = (iceDivide-contShelf)*1000*2; % [m] full width of the ice sheet at maximum (edge to edge)
 
 % horizontal space
 xk = -5*Lmax : dx : 5*Lmax;
+
 
 % Lmin = (725-455)*1000*2; % ]m] full width of the ice sheet at minimum (min margin)
 % Lmarg = Lmax:-dx:Lmin;
@@ -166,20 +181,26 @@ xk = -5*Lmax : dx : 5*Lmax;
 % Sis_surf_flip= importdata('Sis_surf_flip.csv')';
 % surf(5441:6021) =Sis_surf_flip; 
 
-icetau = 110e3;                     % [Pa], yield strength of ice 100 kPa
-rho_ice = 917;                      % [kg/m3] ice density
-rho_mantle = 3200;                  % [kg/m3] mantle density
-gk = 9.8;                           % [m/s2] gravity
-hk =40e3;                        	% [m] Lithosphere elastic thickness: Te ~ h ~ 100 km for cratons
-Ek = 70e9;                          % [Pa] Young's Modulus, Turcotte & Schubert p. 152 Problem 3.19
-nuk = 0.25;                         % [] Poisson's Ratio, p. 152 Problem 3.19
-Dk = Ek*hk^3/12/(1-nuk^2);          % [Pa m^3] Flexural rigidity parameter for lithoplate
-alpha = (4*Dk/rho_mantle/gk)^0.25;  % [m] length scale of bulging
+% constants
+constants
+
+% These are defined in the file constants.m
+% icetau = 110e3;                     % [Pa], yield strength of ice 100 kPa
+% rho_ice = 917;                      % [kg/m3] ice density
+% rho_mantle = 3200;                  % [kg/m3] mantle density
+% gk = 9.8;                           % [m/s2] gravity
+% hk =40e3;                        	% [m] Lithosphere elastic thickness: Te ~ h ~ 100 km for cratons
+% Ek = 70e9;                          % [Pa] Young's Modulus, Turcotte & Schubert p. 152 Problem 3.19
+% nuk = 0.25;                         % [] Poisson's Ratio, p. 152 Problem 3.19
+% Dk = Ek*hk^3/12/(1-nuk^2);          % [Pa m^3] Flexural rigidity parameter for lithoplate
+% alpha = (4*Dk/rho_mantle/gk)^0.25;  % [m] length scale of bulging
 
 % This for loop builds the ice sheet profile for each km step from the
 % continental divide to the ice minima
-for i = 1:607   
-    Lk = (Lmax:-dx:Lmax-((i-1)*1000))';
+
+up = zeros(iceRetreat,Lmax/100+1);
+for i = 1:iceRetreat   
+    Lk = (Lmax:-dx:Lmax-((i-1)*dx))';
 %     Lk = Lk';
 
     % parabolic ice sheet profile
@@ -188,9 +209,6 @@ for i = 1:607
     up(i,:) = Hk(:);
 end
 
-%%
-Hk2 = up(1:2:end,:);
-%%
 Hk = up(1:2:end,:); % This decimates the profile to simplify the choice of profiles
 %%
 % here you put in you for loop for creating the animation
@@ -343,6 +361,7 @@ dist_X = (0:1000:1532000);% west to east distance used for plotting the entire i
 west_x = (0:1000:724000); %west half of ice sheet
 
 figure(4)
+clf
 hold on
 plot(west_x,Sis_bed(1,1:TKM))
 plot(west_x(435:TKM),Sis_surf(1,435:TKM))
