@@ -1,0 +1,27 @@
++add ll2psn to the repository
+improve the lat/long selection input. It is currently hard coded into the file at lines 18-24 as static values and the indices to the matrix from BedMachine, which is very cumbersome. Possibly make it an input from a graph?
+Give the user options to: input from a file (API style?), direct input into the code, direct input via the command line, or pick from a map.
+in lines 26 and 27, 1533 is used, which I think references the center of the GrIS, but I'm not sure
+TKM (30) and SKM (31) are parameters that need to be input rather than static. This sets the lateral extent of the ice.
+38 could replace with lat2 and lon2?
+43 AAA looks to not be used and consider renaming IceThickPresent
+53 and 54 look to be dependent on 725 (width?) and and local max and min points prescribed for each line choice. This should be a parameter input
+55 Lmarg is not used, but could be used in 62
+61 extent of the for loop (607) needs to be dynamic
+Move parameters [65-76] out of the for loop and make an input file or put earlier in the code [76]. This will make it adjustable for sensitivity tests
+79 check to simplify  the double divide into a ()/()
+check out 79-83 to see about preallocating up, and how that system functions
+90 can the size of out be determined from previously defined variable? Especially 304, which appears site specific (length?) and 11461, which is time step? UPDATE: 11461 is the length of xk and is known. - Fixed second half. 
+What is the out variable supposed to be?
+check with Kristin how plate1bvp_v2 works
+106 might be able to simplify out the for loop for matrix algebra???
+108 work through the if statementto make sure it's correct. Seems ify???
+122-123 what is this doing? Where does 284 come from?
+124 valk doesn't appear later in the code 
+125 What defines 725? is this better served as a variable? This is also the square matrix
+
+This is the part of the code that could use some serious simplifying and probably either functions or script calls. I think 122-149 is where the ice front steps through time as retreat rates. This would be good to automate and possibly allow input for time retreat rates. This is going to be the big part.
+What is flex variable supposed to be? what are units?
+what decides the range of values 5007:5731
+225 226 Can I input an outline of greenland and ice divide so the code can auto generate these values?
+
