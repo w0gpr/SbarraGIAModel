@@ -169,6 +169,8 @@ iceRetreat = 607;
 
 % Lmax could be set earlier as a parameter input
 Lmax  = (iceDivide-contShelf)*1000*2; % [m] full width of the ice sheet at maximum (edge to edge)
+% I'm not sure why this cant be the full width of the iceDivide. It looks
+% like it will build a domain that is well beyond the width of the ice.
 
 % horizontal space
 xk = -5*Lmax : dx : 5*Lmax;
@@ -198,28 +200,28 @@ constants
 % This for loop builds the ice sheet profile for each km step from the
 % continental divide to the ice minima
 
-up = zeros(iceRetreat,Lmax/100+1);
+up = zeros(iceRetreat,length(xk));
 for i = 1:iceRetreat   
-    Lk = (Lmax:-dx:Lmax-((i-1)*dx))';
+    Lk = (Lmax:-dx:Lmax-((i-1)*dx))';   % this is done this way to "auto-allocate" the array.
 %     Lk = Lk';
 
     % parabolic ice sheet profile
     Hk = real(sqrt(2*icetau / rho_ice / gk * (Lk(i)/2-xk)));
-    Hk(xk<0) = fliplr(Hk(xk>0));    % This makes it symmetrical about the ice divide
+    Hk(xk<0) = fliplr(Hk(xk>0));    % This makes it symmetrical about the ice divide???
     up(i,:) = Hk(:);
 end
 
 Hk = up(1:2:end,:); % This decimates the profile to simplify the choice of profiles
 %%
-% here you put in you for loop for creating the animation
+% here you put in your for loop for creating the animation
 % first initialize your output matrices to save speed
 % then run the for loop
 
 % load V(x)
 nx = length(xk);
-out = zeros(304, nx);
+out = zeros(304, nx);   % Why 304? Where does this number derive from? Can it be determined from other values?
 for i = 1:304
-Vk = Hk(i,:)*dx;  % [Pa/m] spatially varying line load V(x)
+% Vk = Hk(i,:)*dx;  % [Pa/m] spatially varying line load V(x)
 
 % Flexure from a generic load
 gensol = plate1bvp_v2(false);  % false will not make any plots
@@ -248,9 +250,15 @@ end
 out(i,:) = wk(:);
 end
 
+
+%% Build the Flexure profiles???
+% It looks like this part builds the flexure of the crust for the large and
+% small ice sheet configuration. This was originally done manually, but I
+% think with retreat rates or locations along the line (moraines) with ages
+% as in input file??? would be useful. This part has to be changed though.
 out1 = out;
 out1 = out1-(out1(284,:));
-valk = 1:304;
+% valk = 1:304; % Does not appear anywhere
 flex = zeros(725,725);
 for i = 1:145 %(Big ice)
     flex(i,1:725) = out1(1,5007:5731);
@@ -580,7 +588,7 @@ set(gca, 'XTick', xt, 'XTickLabel', xt/1000)
 
 B_LGM_Dep = (H-(H3)).*(.91/3.2);
 %Big_LGM_bed = Sis_bed(1,1:TKM)-B_LGM_Dep.';
-Big_LGM_bed = flex_real(152,:);
+Big_LGM_bed = flex_real(contShelf,:);
 %Big_LGM_bed = B_LGM_Dep.'-Sis_bed(1,1:766);
 %Big_LGM_bed(1,1:152) = Water_change(1,1:152);
 figure
