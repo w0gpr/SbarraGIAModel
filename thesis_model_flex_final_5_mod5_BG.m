@@ -256,10 +256,18 @@ end
 % small ice sheet configuration. This was originally done manually, but I
 % think with retreat rates or locations along the line (moraines) with ages
 % as in input file??? would be useful. This part has to be changed though.
-out1 = out;
-out1 = out1-(out1(284,:));
+out1 = out; % This is to see the difference imposed.
+out1 = out1-(out1(284,:));  % What is special about 284? is this a point in time, or space (Time I think)
 % valk = 1:304; % Does not appear anywhere
 flex = zeros(725,725);
+
+% Christopher... HOW AND WHY!
+% OK, The column is time, rows are space (time,space). 5007-5731 is ~ the
+% span that covers the extent of the ice from the continental shelf to the
+% ice divide. The middle of out1 is 5851, so I'm not sure why flex doesn't
+% go from 5851-iceDivide:5851
+
+% This for loop is for the ice sitting at the LGM for 146*dt years
 for i = 1:145 %(Big ice)
     flex(i,1:725) = out1(1,5007:5731);
 end
